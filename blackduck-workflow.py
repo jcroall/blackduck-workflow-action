@@ -34,7 +34,7 @@ if __name__ == "__main__":
 
     os.environ["BLACKDUCK_TOKEN"] = token
 
-    cmd_opts = f"--url=\"{url}\" --output_directory=\"{input_dir}\" --output \"{sarif}\""
+    cmd_opts = f"--url=\"{url}\" --output_directory=\"{input_dir}\" --output \"{sarif}\" --debug 9 "
     if (fixpr == "true"):
         cmd_opts = cmd_opts + " --fixpr"
     if (upgrademajor == "true"):
