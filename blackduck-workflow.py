@@ -42,13 +42,12 @@ if __name__ == "__main__":
     if (comment == "true"):
         cmd_opts = cmd_opts + " --comment"
 
-    print(f"EXEC: /bin/bash <workflow command> {cmd_opts}")
+    print(f"EXEC: python3 /blackduck-rapid-scan-to-sarif-bdio.py {cmd_opts}")
 
-    #result = subprocess.Popen(f"/bin/bash {detect_cmd} {detect_opts}", shell=True)
-    #detect_output = result.communicate()[0]
-    #return_code = result.returncode
+    result = subprocess.Popen(f"python3 /blackduck-rapid-scan-to-sarif-bdio.py {cmd_opts}", shell=True)
+    cmd_output = result.communicate()[0]
+    return_code = result.returncode
 
-    #print(f"INFO: Done, return value {return_code}")
+    print(f"INFO: Done, return value {return_code}")
 
-    #sys.exit(return_code)
-    sys.exit(0)
+    sys.exit(return_code)

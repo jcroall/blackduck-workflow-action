@@ -3,9 +3,9 @@ COPY --from=python:slim / /
 #FROM python:slim
 
 ADD blackduck-workflow.py /blackduck-workflow.py
+ADD blackduck-rapid-scan-to-sarif-bdio.py /blackduck-rapid-scan-to-sarif-bdio.py
 
-RUN pip install --upgrade pip
-#RUN pip install PyGithub
+RUN pip install --upgrade pip && pip install pathlib PyGithub networkx blackduck
 
 WORKDIR /app
 
