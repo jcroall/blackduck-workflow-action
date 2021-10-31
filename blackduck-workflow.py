@@ -42,6 +42,10 @@ if __name__ == "__main__":
     if (comment == "true"):
         cmd_opts = cmd_opts + " --comment"
 
+    os.system("pwd")
+    os.system("find . -print")
+    os.system("ls -lR")
+
     print(f"EXEC: python3 /blackduck-rapid-scan-to-sarif-bdio.py {cmd_opts}")
 
     result = subprocess.Popen(f"python3 /blackduck-rapid-scan-to-sarif-bdio.py {cmd_opts}", shell=True)
