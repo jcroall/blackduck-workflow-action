@@ -1,0 +1,44 @@
+name: "Black Duck Workflow"
+description: "Black Duck Advanced Workflow"
+author: "James Croall"
+branding:
+  icon: "alert-triangle"
+  color: "yellow"
+inputs:
+  url:
+    description: "Black Duck URL"
+  token:
+    description: "Black Duck API Token"
+  input:
+    description: "Output directory from Black Duck Scan Action"
+    default: "blackduck-output"
+  fixpr:
+    description: "Generate a Fix PR for each insecure component"
+    default: "false"
+  upgrademajor:
+    description: "Recommend upgrade guidance to major, not just minor, versions"
+    default: "false"
+  comment:
+    description: "Comment on a pull request"
+    default: "false"
+  sarif:
+    description: "Output file for SARIF"
+    default: "blackduck-sarif.json"
+runs:
+  using: "docker"
+  image: "Dockerfile"
+  args:
+  - --url
+  - ${{ inputs.url }}
+  - --token
+  - ${{ inputs.token }}
+  - --input
+  - ${{ inputs.input }}
+  - --fixpr
+  - ${{ inputs.fixpr }}
+  - --upgrademajor
+  - ${{ inputs.upgrademajor }}
+  - --comment
+  - ${{ inputs.comment }}
+  - --sarif
+  - ${{ inputs.sarif }}
