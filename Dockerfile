@@ -9,4 +9,4 @@ RUN pip install --upgrade pip
 
 WORKDIR /app
 
-ENTRYPOINT ["/blackduck-scan.py"]
+ENTRYPOINT ["/blackduck-workflow.py"]
