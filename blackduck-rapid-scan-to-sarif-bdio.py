@@ -147,9 +147,10 @@ def bdio_read(bdio_in, inputdir):
     filelist = os.listdir(inputdir)
     for filename in filelist:
         #print ("processing {}".format(filename))
-        filepath_in = os.path.join(inputdir, filename)
-        data = read_json_object(filepath_in)
-        return data
+        if (filename.startswith("bdio-entry")):
+            filepath_in = os.path.join(inputdir, filename)
+            data = read_json_object(filepath_in)
+            return data
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -216,6 +217,7 @@ if (len(bd_rapid_output_bdio_glob) == 0):
 bd_rapid_output_bdio = bd_rapid_output_bdio_glob[0]
 
 bd_rapid_output_bdio_dir = glob.glob(bd_rapid_output_dir + "/runs/*/bdio")[0]
+# TODO is there a case where there would be more than one BDIO file?
 bdio_data = bdio_read(bd_rapid_output_bdio, bd_rapid_output_bdio_dir)
 if (debug):
     print(f"DEBUG: BDIO Dump: "+ json.dumps(bdio_data, indent=4))
