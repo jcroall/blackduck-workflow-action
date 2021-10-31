@@ -10,14 +10,11 @@ import hashlib
 import zipfile
 import re
 import shutil
-import secrets
-from pathlib import Path
+import random
 from zipfile import ZIP_DEFLATED
 from pprint import pprint
 from github import Github
-
 import networkx as nx
-import matplotlib.pyplot as plt
 
 from blackduck import Client
 
@@ -64,7 +61,8 @@ def github_commit_file_and_create_fixpr(g, github_token, github_api_url, github_
     commit = repo.get_commit('HEAD')
     if (debug): print(commit)
 
-    new_branch_seed = secrets.token_hex(15)
+    new_branch_seed = '%030x' % random.randrange(16**30)
+    #new_branch_seed = secrets.token_hex(15)
     new_branch_name = github_branch + "-snps-fix-pr-" + new_branch_seed
     if (debug): print(f"DEBUG: Create branch '{new_branch_name}'")
     ref = repo.create_git_ref("refs/heads/" + new_branch_name, commit.sha)
@@ -205,8 +203,7 @@ for detector in output_status_data['detectors']:
     for explanation in reversed(detector['explanations']):
         if (str.startswith(explanation, "Found file: ")):
             package_file = explanation[len("Found file: "):]
-            path = Path(package_file)
-            if (path.is_file()): 
+            if (os.path.isfile(package_file)):
                 detected_package_files.append(package_file)
                 if (debug): print(f"DEBUG: Explanation: {explanation} File: {package_file}")
 
