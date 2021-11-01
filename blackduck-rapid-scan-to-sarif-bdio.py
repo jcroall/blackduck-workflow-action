@@ -510,11 +510,11 @@ if (fix_pr):
 if (comment_pr):
     github_token = os.getenv("GITHUB_TOKEN")
     github_repo = os.getenv("GITHUB_REPOSITORY")
-    github_branch = os.getenv("GITHUB_REF")
+    github_ref = os.getenv("GITHUB_REF")
     github_api_url = os.getenv("GITHUB_API_URL")
     github_sha = os.getenv("GITHUB_SHA")
 
-    if (github_token == None or github_repo == None or github_branch == None or github_api_url == None or github_sha == None):
+    if (github_token == None or github_repo == None or github_ref == None or github_api_url == None or github_sha == None):
         print("ERROR: Cannot find GITHUB_TOKEN, GITHUB_REPOSITORY, GITHUB_REF, GTIHUB_SHA and/or GITHUB_API_URL in the environment - are you running from a GitHub action?")
         sys.exit(1)
 
@@ -525,12 +525,35 @@ if (comment_pr):
     repo = g.get_repo(github_repo)
     if (debug): print(repo)
 
+    if (debug): print(f"DEBUG: Look up GitHub ref '{github_ref}'")
+    # Remove leading refs/ as the API will prepend it on it's own
+    # Actually look pu the head not merge ref to get the latest commit so
+    # we can find the pull request
+    ref = repo.get_git_ref(github_ref[5:].replace("/merge", "/head"))
+    if (debug):
+        print(ref)
+
+    # Look for this pull request by finding the first commit, and then looking for a
+    # PR that matches
+    # TODO Safe to assume that there are at least one commit?
+    github_sha = ref.object.sha
+    #for commit in ref:
+    #    if (commit['object']['type'] == "commit"):
+    #        github_sha = commit['object']['sha']
+    #        break
+
+    #if (github_sha == None):
+    #    print(f"ERROR: Unable to find any commits for ref '{github_ref}'")
+    #    sys.exit(1)
+
+    print(f"DEBUG: Found Git sha {github_sha} for ref '{github_ref}'")
+
     # TODO Should this handle other bases than master?
-    pulls = repo.get_pulls(state='open', sort='created', base='master')
+    pulls = repo.get_pulls(state='open', sort='created', base='master', direction="desc")
     pr = None
     pr_commit = None
     if (debug): print(f"DEBUG: Pull requests:")
-    for pull in pulls.reversed:
+    for pull in pulls:
         if (debug): print(f"DEBUG: Pull request number: {pull.number}")
         # Can we find the current commit sha?
         pull_number_for_sha = 0
@@ -548,9 +571,6 @@ if (comment_pr):
     if (pull_number_for_sha == 0):
         print(f"ERROR: Unable to find pull request for commit '{github_sha}'")
         sys.exit(1)
-
-    print("FIX PR DATA:")
-    print(fix_pr_data)
 
     for fix_pr_node in fix_pr_data:
         if (debug): print(f"DEUBG: Comment on Pull Request #{pr.number} for commit {github_sha} for component '{fix_pr_node['componentName']}'")
