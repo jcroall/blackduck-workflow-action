@@ -568,10 +568,10 @@ if (comment_pr):
     pr = None
     pr_commit = None
     if (debug): print(f"DEBUG: Pull requests:")
+    pull_number_for_sha = 0
     for pull in pulls:
         if (debug): print(f"DEBUG: Pull request number: {pull.number}")
         # Can we find the current commit sha?
-        pull_number_for_sha = 0
         commits = pull.get_commits()
         for commit in commits.reversed:
             if (debug): print(f"DEBUG:   Commit sha: " + str(commit.sha))
