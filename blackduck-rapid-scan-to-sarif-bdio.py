@@ -408,15 +408,15 @@ for item in dev_scan_data['items']:
         rule_help = dict()
         rule_help['text'] = ""
         if (upgrade_version != None):
-            rule_help['markdown'] = f"*{vuln['description']} Recommended to upgrade to version {upgrade_version}. Fix in package file '{package_file}'*"
+            rule_help['markdown'] = f"*{vuln['description']} Recommended to upgrade to version {upgrade_version}.*"
         else:
-            rule_help['markdown'] = f"*{vuln['description']} No upgrade available at this time. Fix in package file '{package_file}'*"
+            rule_help['markdown'] = f"*{vuln['description']} No upgrade available at this time.'*"
 
         if (dependency_type == "Direct"):
             rule_help['markdown'] = rule_help['markdown'] + f" Fix in package file '{package_file}'"
         else:
             if (len(dependency_paths) > 0):
-                rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in {dependency_paths[0]}"
+                rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in {dependency_paths[0]}."
 
         tool_rule['help'] = rule_help
         defaultConfiguration = dict()
