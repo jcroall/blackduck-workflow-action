@@ -251,6 +251,8 @@ for node in bdio_data['@graph']:
             child = dependency['https://blackducksoftware.github.io/bdio#dependsOn']['@id']
             if (debug): print(f"DEBUG:   Dependency on {child}")
             G.add_edge(parent, child)
+    else:
+        G.add_node(parent)
 
 if (len(projects) == 0):
     print("ERROR: Unable to find base project in BDIO file")
@@ -301,8 +303,11 @@ for item in dev_scan_data['items']:
     # Track the root dependencies
     dependency_paths = []
 
+    if (debug): print(f"DEBUG: Looking for {item['componentIdentifier']}")
     node_name = re.sub(":", "/", item['componentIdentifier'], 1)
     node_name = "http:" + node_name
+    if (debug): print(f"DEBUG: Looking for {node_name}")
+    print(G.nodes)
     ans = nx.ancestors(G, node_name)
     ans_list = list(ans)
     if (len(ans_list) != 1):
