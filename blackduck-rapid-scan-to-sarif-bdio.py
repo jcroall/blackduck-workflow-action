@@ -115,6 +115,8 @@ def generate_fix_pr_npmjs(filename, filename_local, component_name, version_from
         print(f"ERROR: Unable to open package file '{filename}'")
         sys.exit(1)
 
+    # TODO Is it more correct to only upgrade to compatible versions according to semver?
+    # That doesn't seem aggressive enough
     if (debug): print(f"DEBUG: Searching {filename} for component '{component_name}' ...")
     for dependency in data['dependencies'].keys():
         if (dependency == component_name):
@@ -390,7 +392,7 @@ for item in dev_scan_data['items']:
         result['message'] = message
         locations = []
         loc = dict()
-        loc['file'] = package_file
+        loc['file'] = remove_cwd_from_filename(package_file)
         # TODO: Can we reference the line number in the future, using project inspector?
         loc['line'] = 1
 
