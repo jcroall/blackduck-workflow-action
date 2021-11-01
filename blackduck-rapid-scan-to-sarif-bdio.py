@@ -371,6 +371,7 @@ for item in dev_scan_data['items']:
     for vuln in item['policyViolationVulnerabilities']:
         if (upgrade_version != None):
             message = f"* {vuln['name']} - {vuln['vulnSeverity']} severity vulnerability violates policy '{vuln['violatingPolicies'][0]['policyName']}': *{vuln['description']}* Recommended to upgrade to version {upgrade_version}. {dependency_type} dependency."
+
         else:
             message = f"* {vuln['name']} - {vuln['vulnSeverity']} severity vulnerability violates policy '{vuln['violatingPolicies'][0]['policyName']}': *{vuln['description']}* No upgrade available at this time. {dependency_type} dependency."
         if (dependency_type == "Direct"):
@@ -410,6 +411,13 @@ for item in dev_scan_data['items']:
             rule_help['markdown'] = f"*{vuln['description']} Recommended to upgrade to version {upgrade_version}. Fix in package file '{package_file}'*"
         else:
             rule_help['markdown'] = f"*{vuln['description']} No upgrade available at this time. Fix in package file '{package_file}'*"
+
+        if (dependency_type == "Direct"):
+            rule_help['markdown'] = rule_help['markdown'] + f" Fix in package file '{package_file}'"
+        else:
+            if (len(dependency_paths) > 0):
+                rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in {dependency_paths[0]}"
+
         tool_rule['help'] = rule_help
         defaultConfiguration = dict()
 
