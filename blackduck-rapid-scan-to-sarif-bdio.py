@@ -153,6 +153,36 @@ def bdio_read(bdio_in, inputdir):
             filepath_in = os.path.join(inputdir, filename)
             data = read_json_object(filepath_in)
             return data
+        
+def get_comps(bd, pv):
+    comps = bd.get_json(pv + '/components?limit=5000')
+    newcomps = []
+    complist = []
+    for comp in comps['items']:
+        if 'componentVersionName' not in comp:
+            continue
+        cname = comp['componentName'] + '/' + comp['componentVersionName']
+        if comp['ignored'] is False and cname not in complist:
+            newcomps.append(comp)
+            complist.append(cname)
+    return newcomps
+
+def get_projver(bd, projname, vername):
+    params = {
+        'q': "name:" + projname,
+        'sort': 'name',
+    }
+    projects = bd.get_resource('projects', params=params, items=False)
+    if projects['totalCount'] == 0:
+        return ''
+    # projects = bd.get_resource('projects', params=params)
+    for proj in projects['items']:
+        versions = bd.get_resource('versions', parent=proj, params=params)
+        for ver in versions:
+            if ver['versionName'] == vername:
+                return ver['_meta']['href']
+    print("ERROR: Version '{}' does not exist in project '{}'".format(projname, vername))
+    return ''
 
 # Parse command line arguments
 parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -164,6 +194,7 @@ parser.add_argument('--output', required=True, help='File to output SARIF to')
 parser.add_argument('--upgrademajor', default=False, action='store_true', help='Upgrade beyond current major version')
 parser.add_argument('--fixpr', default=False, action='store_true', help='Create Fix PR for upgrade guidance')
 parser.add_argument('--comment', default=False, action='store_true', help='Comment on the pull request being scanned')
+parser.add_argument('--allcomps', default=False, action='store_true', help='Report on ALL components, not just newly introduced')
 
 args = parser.parse_args()
 
@@ -178,6 +209,7 @@ upgrade_major = args.upgrademajor
 sarif_output_file = args.output
 fix_pr = args.fixpr
 comment_pr = args.comment
+allcomps = args.allcomps
 
 fix_pr_annotation = ""
 
@@ -209,6 +241,27 @@ for detector in output_status_data['detectors']:
             if (os.path.isfile(package_file)):
                 detected_package_files.append(package_file)
                 if (debug): print(f"DEBUG: Explanation: {explanation} File: {package_file}")
+
+# Find project name and version to use in looking up baseline data
+project_baseline_name = output_status_data['projectName']
+project_baseline_version = output_status_data['projectVersion']
+
+print(f"INFO: Running for project '{project_baseline_name}' version '{project_baseline_version}'")
+
+# Look up baseline data
+pvurl = get_projver(bd, project_baseline_name, project_baseline_version)
+baseline_comp_cache = dict()
+if (not allcomps):
+    if (pvurl == ''):
+        print(f"WARN: Unable to find project '{project_baseline_name}' version '{project_baseline_version}' - will not present incremental results")
+    else:
+        if (debug): print(f"DEBUG: Project Version URL: {pvurl}")
+        baseline_comps = get_comps(bd, pvurl)
+        #if (debug): print(f"DEBUG: Baseline components=" + json.dumps(baseline_comps, indent=4))
+        for comp in baseline_comps:
+            baseline_comp_cache[comp['componentName']] = comp['componentVersionName']
+        #if (debug): print(f"DEBUG: Baseline component cache=" + json.dumps(baseline_comp_cache, indent=4))
+        if (debug): print(f"DEBUG: Generated baseline component cache")
 
 # Parse BDIO file into network graph
 bd_rapid_output_bdio_glob = glob.glob(bd_rapid_output_dir + "/runs/*/bdio/*.bdio")
@@ -295,7 +348,13 @@ results = []
 fix_pr_data = []
 
 for item in dev_scan_data['items']:
-    if (debug): print(f"DEBUG: Component: {item['componentIdentifier']}")
+    if (debug):
+        print(f"DEBUG: Component: {item['componentIdentifier']}")
+
+        # If comparing to baseline, look up in cache and continue if already exists
+        if (not allcomps and item['componentName'] in baseline_comp_cache):
+            print(f"DEBUG:   Skipping component {item['componentName']} because it was already seen in baseline")
+            continue
 
     # Is this a direct dependency?
     dependency_type = "Direct"
@@ -429,7 +488,7 @@ for item in dev_scan_data['items']:
         if (vuln['vulnSeverity'] == "CRITITAL" or vuln['vulnSeverity'] == "HIGH"):
             defaultConfiguration['level'] = "error"
         elif (vuln['vulnSeverity'] == "MEDIUM"):
-            efaultConfiguration['level'] = "warning"
+            defaultConfiguration['level'] = "warning"
         else:
             defaultConfiguration['level'] = "note"
 
@@ -493,7 +552,7 @@ except:
 # Optionally generate Fix PR
 
 fix_pr_components = dict()
-if (fix_pr):
+if (fix_pr and len(fix_pr_data) > 0):
     github_token = os.getenv("GITHUB_TOKEN")
     github_repo = os.getenv("GITHUB_REPOSITORY")
     github_branch = os.getenv("GITHUB_REF")
@@ -522,7 +581,7 @@ if (fix_pr):
 
 # Optionally comment on the pull request this is for
 
-if (comment_pr):
+if (comment_pr and len(fix_pr_data) > 0):
     github_token = os.getenv("GITHUB_TOKEN")
     github_repo = os.getenv("GITHUB_REPOSITORY")
     github_ref = os.getenv("GITHUB_REF")
@@ -590,3 +649,6 @@ if (comment_pr):
     for fix_pr_node in fix_pr_data:
         if (debug): print(f"DEUBG: Comment on Pull Request #{pr.number} for commit {github_sha} for component '{fix_pr_node['componentName']}'")
         github_create_pull_request_comment(g, github_repo, pr, pr_commit, fix_pr_node)
+
+if (len(fix_pr_data) == 0):
+    print(f"INFO: No new components found, nothing to report")

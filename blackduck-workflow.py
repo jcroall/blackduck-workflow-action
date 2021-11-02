@@ -18,6 +18,7 @@ if __name__ == "__main__":
     parser.add_argument("--upgrademajor", type=str, help="Offer upgrades to major versions, true or false")
     parser.add_argument("--comment", type=str, help="Generate a comment on pull request, true or false")
     parser.add_argument("--sarif", type=str, help="SARIF output file")
+    parser.add_argument("--incremental", type=str, help="Incremental output file")
 
     args = parser.parse_args()
 
@@ -31,6 +32,7 @@ if __name__ == "__main__":
     upgrademajor = args.upgrademajor
     comment = args.comment
     sarif = args.sarif
+    incremental = args.incremental
 
     os.environ["BLACKDUCK_TOKEN"] = token
 
@@ -41,6 +43,8 @@ if __name__ == "__main__":
         cmd_opts = cmd_opts + " --upgrademajor"
     if (comment == "true"):
         cmd_opts = cmd_opts + " --comment"
+    if (incremental == "false"):
+        cmd_opts = cmd_opts + " --allcomps"
 
     print(f"EXEC: python3 /blackduck-rapid-scan-to-sarif-bdio.py {cmd_opts}")
 
