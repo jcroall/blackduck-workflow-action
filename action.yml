@@ -24,6 +24,9 @@ inputs:
   sarif:
     description: "Output file for SARIF"
     default: "blackduck-sarif.json"
+  incremental:
+    description: "Incremental analysis"
+    default: "false"
 runs:
   using: "docker"
   image: "Dockerfile"
@@ -42,3 +45,5 @@ runs:
   - ${{ inputs.comment }}
   - --sarif
   - ${{ inputs.sarif }}
+  - --incremental
+  - ${{ inputs.incremental }}
