@@ -102,8 +102,9 @@ def detect_package_file(package_files, component_identifier, component_name):
     name = name_version.split('/')[0]
 
     for package_file in package_files:
-        if (line_num_for_phrase_in_file("\"" + name + "\"", package_file) >0):
-            return package_file
+        line = line_num_for_phrase_in_file("\"" + name + "\"", package_file)
+        if (line > 0):
+            return package_file, line
 
     return "Unknown"
 
@@ -380,7 +381,11 @@ for item in dev_scan_data['items']:
             for path in dep_paths:
                 path_modified = path
                 path_modified.pop(0)
-                pathstr = " -> ".join(path_modified)
+                # Subtract http:<domain>/
+                path_modified_trimmed = [re.sub(r'http\:.*?\/', '', path_name) for path_name in path_modified]
+                # Change / to @
+                path_modified_trimmed = [re.sub(r'\/', '@', path_name) for path_name in path_modified_trimmed]
+                pathstr = " -> ".join(path_modified_trimmed)
                 if (debug): print(f"DEBUG:   path={pathstr}")
                 dependency_paths.append(pathstr)
 
@@ -416,16 +421,18 @@ for item in dev_scan_data['items']:
     # Use hub-rest-api-python/examples/bdio_update_project_name.py as
     # a reference.
 
-    package_file = detect_package_file(detected_package_files, item['componentIdentifier'], item['componentName'])
+    package_file, package_line = detect_package_file(detected_package_files, item['componentIdentifier'], item['componentName'])
 
     # Note the details for generating a fix pr
     ptype = item['componentIdentifier'].split(':')[0]
     name_version = item['componentIdentifier'].split(':')[1]
     name = name_version.split('/')[0]
+    current_version = None
     if (dependency_type == "Direct" and upgrade_version != None):
         fix_pr_node = dict()
         fix_pr_node['componentName'] = name
         fix_pr_node['versionFrom'] = component_upgrade_data['versionName']
+        current_version = fix_pr_node['versionFrom']
         fix_pr_node['versionTo'] = upgrade_version
         fix_pr_node['scheme'] = ptype
         fix_pr_node['filename'] = remove_cwd_from_filename(package_file)
@@ -472,15 +479,15 @@ for item in dev_scan_data['items']:
         rule_help = dict()
         rule_help['text'] = ""
         if (upgrade_version != None):
-            rule_help['markdown'] = f"*{vuln['description']} Recommended to upgrade to version {upgrade_version}.*"
+            rule_help['markdown'] = f"**{vuln['name']}:** *{vuln['description']}*\n\nRecommended to upgrade to version {upgrade_version}.\n\n"
         else:
-            rule_help['markdown'] = f"*{vuln['description']} No upgrade available at this time.'*"
+            rule_help['markdown'] = f"**{vuln['name']}:** *{vuln['description']}*\n\nNo upgrade available at this time.\n\n"
 
         if (dependency_type == "Direct"):
-            rule_help['markdown'] = rule_help['markdown'] + f" Fix in package file '{package_file}'"
+            rule_help['markdown'] = rule_help['markdown'] + f"Fix in package file '{package_file}'"
         else:
             if (len(dependency_paths) > 0):
-                rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in {dependency_paths[0]}."
+                rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in **{dependency_paths[0]}**."
 
         tool_rule['help'] = rule_help
         defaultConfiguration = dict()
