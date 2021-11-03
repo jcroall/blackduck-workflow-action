@@ -401,13 +401,13 @@ for item in dev_scan_data['items']:
     component_upgrade_data = bd.get_json(component_result['version'] + "/upgrade-guidance")
     if (debug): print("DEBUG: Compponent upgrade data=" + json.dumps(component_upgrade_data, indent=4) + "\n")
 
+    upgrade_version = None
     if (upgrade_major):
-        upgrade_version = component_upgrade_data['longTerm']['versionName']
+        if ("longTerm" in component_upgrade_data.keys()):
+            upgrade_version = component_upgrade_data['longTerm']['versionName']
     else:
         if ("shortTerm" in component_upgrade_data.keys()):
             upgrade_version = component_upgrade_data['shortTerm']['versionName']
-        else:
-            upgrade_version = None
 
     # TODO: Process BDIO file from blackduck output directory to build
     # dependency graph, use NetworkX for Python, locate package node and
