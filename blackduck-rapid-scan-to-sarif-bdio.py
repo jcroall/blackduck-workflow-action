@@ -507,7 +507,7 @@ for item in dev_scan_data['items']:
         tool_rule['help'] = rule_help
         defaultConfiguration = dict()
 
-        if (vuln['vulnSeverity'] == "CRITITAL" or vuln['vulnSeverity'] == "HIGH"):
+        if (vuln['vulnSeverity'] == "CRITICAL" or vuln['vulnSeverity'] == "HIGH"):
             defaultConfiguration['level'] = "error"
         elif (vuln['vulnSeverity'] == "MEDIUM"):
             defaultConfiguration['level'] = "warning"
