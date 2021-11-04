@@ -369,7 +369,7 @@ for item in dev_scan_data['items']:
     node_name = re.sub(":", "/", item['componentIdentifier'], 1)
     node_name = "http:" + node_name
     if (debug): print(f"DEBUG: Looking for {node_name}")
-    print(G.nodes)
+    #print(G.nodes)
     ans = nx.ancestors(G, node_name)
     ans_list = list(ans)
     if (len(ans_list) != 1):
@@ -429,12 +429,11 @@ for item in dev_scan_data['items']:
     ptype = item['componentIdentifier'].split(':')[0]
     name_version = item['componentIdentifier'].split(':')[1]
     name = name_version.split('/')[0]
-    current_version = None
+    current_version = name_version.split('/')[1]
     if (dependency_type == "Direct" and upgrade_version != None):
         fix_pr_node = dict()
         fix_pr_node['componentName'] = name
         fix_pr_node['versionFrom'] = component_upgrade_data['versionName']
-        current_version = fix_pr_node['versionFrom']
         fix_pr_node['versionTo'] = upgrade_version
         fix_pr_node['scheme'] = ptype
         fix_pr_node['filename'] = remove_cwd_from_filename(package_file)
@@ -447,6 +446,7 @@ for item in dev_scan_data['items']:
 
         else:
             message = f"* {vuln['name']} - {vuln['vulnSeverity']} severity vulnerability violates policy '{vuln['violatingPolicies'][0]['policyName']}': *{vuln['description']}* No upgrade available at this time. {dependency_type} dependency."
+
         if (dependency_type == "Direct"):
             message = message + f" Fix in package file '{remove_cwd_from_filename(package_file)}'"
         else:
