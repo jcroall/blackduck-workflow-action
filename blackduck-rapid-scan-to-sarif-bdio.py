@@ -357,7 +357,7 @@ for item in dev_scan_data['items']:
         if (not allcomps and item['componentName'] in baseline_comp_cache):
             if (item['versionName'] == baseline_comp_cache[item['componentName']]):
                 print(f"DEBUG:   Skipping component {item['componentName']} version {item['versionName']} because it was already seen in baseline")
-            continue
+                continue
 
     # Is this a direct dependency?
     dependency_type = "Direct"
