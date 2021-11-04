@@ -291,23 +291,30 @@ for node in bdio_data['@graph']:
     parent = node['@id']
     #G.add_edge("Project", parent)
     if (debug): print(f"DEBUG: Parent {parent}")
-    if node['@type'] == "https://blackducksoftware.github.io/bdio#Project":
-        projects.append(parent)
-        if (debug): print(f"DEBUG:   Project name is {parent}")
-        #G.add_edge("Project", parent)
+
+    nx_node = None
 
     if "https://blackducksoftware.github.io/bdio#hasDependency" in node:
         if (isinstance(node['https://blackducksoftware.github.io/bdio#hasDependency'], list)):
             for dependency in node['https://blackducksoftware.github.io/bdio#hasDependency']:
                 child = dependency['https://blackducksoftware.github.io/bdio#dependsOn']['@id']
                 if (debug): print(f"DEBUG:   Dependency on {child}")
-                G.add_edge(parent, child)
+                nx_node = G.add_edge(parent, child)
         else:
-            child = dependency['https://blackducksoftware.github.io/bdio#dependsOn']['@id']
-            if (debug): print(f"DEBUG:   Dependency on {child}")
-            G.add_edge(parent, child)
+            child = node['https://blackducksoftware.github.io/bdio#hasDependency']['https://blackducksoftware.github.io/bdio#dependsOn']['@id']
+            if (debug): print(f"DEBUG:   (2) Dependency on {child}")
+            nx_node = G.add_edge(parent, child)
+
+        if node['@type'] == "https://blackducksoftware.github.io/bdio#Project":
+            projects.append(parent)
+            if (debug): print(f"DEBUG:   Project name is {parent}")
+            G.add_node(parent, project=1)
+            #G.add_edge("Project", parent)
+            #nx.set_node_attributes(nx_node, 1, "project")
     else:
-        G.add_node(parent)
+        print("Parent")
+        nx_node = G.add_node(parent)
+
 
 if (len(projects) == 0):
     print("ERROR: Unable to find base project in BDIO file")
@@ -324,7 +331,7 @@ print("INFO: Parsing Black Duck Rapid Scan output from " + bd_rapid_output_file)
 with open(bd_rapid_output_file) as f:
     output_data = json.load(f)
 
-developer_scan_url = output_data[0]['_meta']['href']
+developer_scan_url = output_data[0]['_meta']['href'] + "?limit=5000"
 if (debug): print("DEBUG: Developer scan href: " + developer_scan_url)
 
 # Handle limited lifetime of developer runs gracefully
@@ -372,6 +379,12 @@ for item in dev_scan_data['items']:
     #print(G.nodes)
     ans = nx.ancestors(G, node_name)
     ans_list = list(ans)
+    if (debug): print(f"DEBUG:   Ancestors are: {ans_list}")
+    pred = nx.DiGraph.predecessors(G, node_name)
+    pred_list = list(pred)
+    if (debug): print(f"DEBUG:   Predecessors are: {ans_list}")
+    #n = G.get_node(node_name)
+    #if (debug): print(f"DEBUG:   Parent is: {n.parent}")
     if (len(ans_list) != 1):
         dependency_type = "Transitive"
 
