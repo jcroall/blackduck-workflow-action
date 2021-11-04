@@ -461,7 +461,7 @@ for item in dev_scan_data['items']:
             message = f"* {vuln['name']} - {vuln['vulnSeverity']} severity vulnerability violates policy '{vuln['violatingPolicies'][0]['policyName']}': *{vuln['description']}* No upgrade available at this time. {dependency_type} dependency."
 
         if (dependency_type == "Direct"):
-            message = message + f" Fix in package file '{remove_cwd_from_filename(package_file)}'"
+            message = message + f"Fix in package file '{remove_cwd_from_filename(package_file)}'"
         else:
             if (len(dependency_paths) > 0):
                 message = message + f" Find dependency in {dependency_paths[0]}"
@@ -499,7 +499,7 @@ for item in dev_scan_data['items']:
             rule_help['markdown'] = f"**{vuln['name']}:** *{vuln['description']}*\n\nNo upgrade available at this time.\n\n"
 
         if (dependency_type == "Direct"):
-            rule_help['markdown'] = rule_help['markdown'] + f"Fix in package file '{package_file}'"
+            rule_help['markdown'] = rule_help['markdown'] + f"Fix in package file '{remove_cwd_from_filename(package_file)}'"
         else:
             if (len(dependency_paths) > 0):
                 rule_help['markdown'] = rule_help['markdown'] + f" Find dependency in **{dependency_paths[0]}**."
