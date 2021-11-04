@@ -5,6 +5,7 @@ import os
 import requests
 import argparse
 import json
+import jsoncfg
 import glob
 import hashlib
 import zipfile
@@ -102,11 +103,24 @@ def detect_package_file(package_files, component_identifier, component_name):
     name = name_version.split('/')[0]
 
     for package_file in package_files:
-        line = line_num_for_phrase_in_file("\"" + name + "\"", package_file)
-        if (line > 0):
-            return package_file, line
+        if ("package.json" in package_file):
+            if (debug): print(f"DEBUG: Searching package.json '{package_file}' for '{name}'")
+            package_json = jsoncfg.load_config(package_file)
+            if (debug):
+                print(f"DEBUG: Deps = ")
+                print(package_json['dependencies'])
 
-    return "Unknown"
+            if name in package_json['dependencies']:
+                if (debug): print(f"DEBUG: Looking for {name} and found it!")
+                node = package_json['dependencies'][name]
+                if (debug): print(f"DEBUG: Return " + str(jsoncfg.node_location(node).line))
+                return package_file, jsoncfg.node_location(node).line
+        else:
+            line = line_num_for_phrase_in_file("\"" + name + "\"", package_file)
+            if (line > 0):
+                return package_file, line
+
+    return "Unknown", 1
 
 def generate_fix_pr_npmjs(filename, filename_local, component_name, version_from, version_to):
     try:
@@ -481,7 +495,7 @@ for item in dev_scan_data['items']:
         loc = dict()
         loc['file'] = remove_cwd_from_filename(package_file)
         # TODO: Can we reference the line number in the future, using project inspector?
-        loc['line'] = 1
+        loc['line'] = package_line
 
         tool_rule = dict()
         tool_rule['id'] = vuln['name']
