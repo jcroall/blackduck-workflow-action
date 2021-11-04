@@ -674,3 +674,7 @@ if (comment_pr and len(fix_pr_data) > 0):
 
 if (len(fix_pr_data) == 0):
     print(f"INFO: No new components found, nothing to report")
+
+if (len(results) > 0):
+    print(f"INFO: Found security vulnerabilities, returning code 1")
+    sys.exit(1)
