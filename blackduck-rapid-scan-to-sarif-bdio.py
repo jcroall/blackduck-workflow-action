@@ -259,6 +259,7 @@ if (not allcomps):
         if (debug): print(f"DEBUG: Project Version URL: {pvurl}")
         baseline_comps = get_comps(bd, pvurl)
         #if (debug): print(f"DEBUG: Baseline components=" + json.dumps(baseline_comps, indent=4))
+        # TODO Should really cache the component Id not the Name
         for comp in baseline_comps:
             baseline_comp_cache[comp['componentName']] = comp['componentVersionName']
         #if (debug): print(f"DEBUG: Baseline component cache=" + json.dumps(baseline_comp_cache, indent=4))
@@ -354,7 +355,8 @@ for item in dev_scan_data['items']:
 
         # If comparing to baseline, look up in cache and continue if already exists
         if (not allcomps and item['componentName'] in baseline_comp_cache):
-            print(f"DEBUG:   Skipping component {item['componentName']} because it was already seen in baseline")
+            if (item['versionName'] == baseline_comp_cache[item['componentName']]):
+                print(f"DEBUG:   Skipping component {item['componentName']} version {item['versionName']} because it was already seen in baseline")
             continue
 
     # Is this a direct dependency?
